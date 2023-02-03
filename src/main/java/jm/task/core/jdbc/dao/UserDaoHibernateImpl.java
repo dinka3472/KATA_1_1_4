@@ -4,6 +4,7 @@ import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,16 +55,13 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        Transaction trans = null;
         try (Session s = Util.getSessionFactory().openSession()){
-            trans = s.getTransaction();
-            trans.begin();
-            s.createQuery("delete User where id = :id").setParameter("id", id).executeUpdate();
-            trans.commit();
+            User user = new User();
+            user = s.get(User.class, user.getId());
+            s.remove(user);
+
         } catch (Exception e) {
-            if (trans != null) {
-                trans.rollback();
-            }
+            System.out.println(e.getMessage());
         }
     }
 
@@ -72,14 +70,10 @@ public class UserDaoHibernateImpl implements UserDao {
         List<User> users = new ArrayList<>();
         Transaction trans = null;
         try (Session s = Util.getSessionFactory().openSession()){
-            trans = s.getTransaction();
-            trans.begin();
-            users = s.createQuery("from User").getResultList();
-            trans.commit();
+            Query<User> query = s.createQuery("from User", User.class);
+            users = query.list();
         } catch (Exception e) {
-            if (trans != null) {
-                trans.rollback();
-            }
+            System.out.println(e.getMessage());
         }
         return users;
     }
